@@ -1,16 +1,21 @@
+--//Services\\--
 local ReplicatedStorage = game:GetService("ReplicatedStorage");
 local UserInputService = game:GetService("UserInputService");
 local Workspace = game:GetService("Workspace");
 local Players = game:GetService("Players");
 local LPlayer = Players.LocalPlayer;
 local Mouse = LPlayer:GetMouse();
+
+--//Variables\\--
 local Remotes: Folder = ReplicatedStorage.Remotes;
 local StampAsset: RemoteFunction = Remotes.StampAsset;
 local DeleteAsset: RemoteFunction = Remotes.DeleteAsset;
+
 local ActiveParts: Folder;
 local Plates: Model = Workspace.Plates;
 local LPlate: Part;
 local MSpikes = {};
+
 for _, Plate in pairs(Plates:GetChildren()) do
 	if (Plate.Owner.Value == LPlayer) then
 		LPlate = Plate.Plate;
@@ -18,13 +23,21 @@ for _, Plate in pairs(Plates:GetChildren()) do
 		break;
 	end;
 end;
+
 local Module = {};
+
 function Module.Kill(Player)
 	if (Player:IsA("Player")) then Player = Player.Character.PrimaryPart; end;
 	StampAsset:InvokeServer(41324885,LPlate.CFrame - Vector3.new(1e309, 1e309, 1e309),"{99ab22df-ca29-4143-a2fd-0a1b79db78c2}",{Player},0);
 end;
+
+function Module.Delete(Part)
+	DeleteAsset:InvokeServer(Part);
+end;
+
 local Aura;
 function Module.DestroyAura(Radius: number)
+	if (Aura) then Aura:Destroy(); end;
 	Radius = Vector3.new(Radius, Radius, Radius);
 	local Blacklist = {};
 	local Hrp = LPlayer.Character.PrimaryPart;
@@ -39,7 +52,14 @@ function Module.DestroyAura(Radius: number)
 	Aura.Shape = Enum.PartType.Ball;
 	Aura.Touched:Connect(function(Part)
 		local a = game.Players:GetPlayerFromCharacter(Part.Parent)
-		if a then Module.Kill(a); end;
+		if a then
+			Module.Kill(a)
+			
+		else
+			
+			Module.Delete(Part)
+			
+		end
 	end);
 	Weld.Part0 = Hrp;
 	Weld.Part1 = Aura;
@@ -47,6 +67,7 @@ function Module.DestroyAura(Radius: number)
 	table.clear(Blacklist);
 	Blacklist = nil;
 end;
+
 UserInputService.InputBegan:Connect(function(InputObject, Proccessed)
 	if (Proccessed) then return; end;
 	if (InputObject.KeyCode == Enum.KeyCode.H) then
